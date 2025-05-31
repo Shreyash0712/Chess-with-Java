@@ -22,4 +22,10 @@ public abstract class Piece {
     public ImageView getImageView() {
         return imageView;
     }
+
+    public boolean isWhite() {
+        return isWhite;
+    }
+
+    public abstract boolean isValidMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board);
 }
