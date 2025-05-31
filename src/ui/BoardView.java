@@ -22,6 +22,8 @@ public class BoardView {
     private int selectedRow = -1;
     private int selectedCol = -1;
 
+    private boolean whiteTurn = true; // white starts
+
     public BoardView() {
         grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
@@ -38,16 +40,13 @@ public class BoardView {
 
                 stack.setOnDragDetected(event -> {
                     Piece piece = boardModel.getPiece(r, c);
-                    if (piece != null) {
-                        // Set selection
+                    if (piece != null && piece.isWhite() == whiteTurn) {
                         selectedRow = r;
                         selectedCol = c;
                         selectedPiece = piece;
 
-                        // Show possible moves
                         showPossibleMoves(r, c, piece);
 
-                        // Start dragging
                         Dragboard db = stack.startDragAndDrop(TransferMode.MOVE);
                         ClipboardContent content = new ClipboardContent();
                         content.putString(r + "," + c);
@@ -74,8 +73,11 @@ public class BoardView {
                         int fromCol = Integer.parseInt(from[1]);
 
                         Piece movingPiece = boardModel.getPiece(fromRow, fromCol);
-                        if (movingPiece != null && movingPiece.isValidMove(fromRow, fromCol, r, c, getBoardState())) {
+                        if (movingPiece != null && movingPiece.isWhite() == whiteTurn &&
+                                movingPiece.isValidMove(fromRow, fromCol, r, c, getBoardState())) {
+
                             movePiece(fromRow, fromCol, r, c);
+                            whiteTurn = !whiteTurn;
                             success = true;
                         }
                     }
@@ -111,7 +113,7 @@ public class BoardView {
 
         // No piece selected yet
         if (selectedPiece == null) {
-            if (clickedPiece != null) {
+            if (clickedPiece != null && clickedPiece.isWhite() == whiteTurn) {
                 selectedRow = row;
                 selectedCol = col;
                 selectedPiece = clickedPiece;
@@ -129,16 +131,20 @@ public class BoardView {
 
         // Clicking another own piece
         if (clickedPiece != null && clickedPiece.isWhite() == selectedPiece.isWhite()) {
-            selectedRow = row;
-            selectedCol = col;
-            selectedPiece = clickedPiece;
-            showPossibleMoves(row, col, clickedPiece);
+            if (clickedPiece.isWhite() == whiteTurn) {
+                selectedRow = row;
+                selectedCol = col;
+                selectedPiece = clickedPiece;
+                showPossibleMoves(row, col, clickedPiece);
+            }
             return;
         }
 
         // Attempting move
-        if (selectedPiece.isValidMove(selectedRow, selectedCol, row, col, getBoardState())) {
+        if (selectedPiece.isWhite() == whiteTurn &&
+                selectedPiece.isValidMove(selectedRow, selectedCol, row, col, getBoardState())) {
             movePiece(selectedRow, selectedCol, row, col);
+            whiteTurn = !whiteTurn;
         }
 
         clearMoveHighlights();
